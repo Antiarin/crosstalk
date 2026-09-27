@@ -1,6 +1,6 @@
 {
   "name": "crosstalk",
-  "version": "2.5.5",
+  "version": "2.5.6",
   "desktopName": "crosstalk",
   "description": "Field-focused Reticulum messaging with native Iridium IMT support",
   "author": "Build with Parallel",
