@@ -49,6 +49,10 @@ from src.backend.outbound_identity import (
     remember_destination_identity,
 )
 from src.backend.reticulum_startup import start_reticulum
+from src.backend.rnode_ble import (
+    apply_macos_rnode_ble_compatibility,
+    scan_rnode_ble_devices,
+)
 from src.backend.lxmf_message_fields import LxmfImageField, LxmfFileAttachmentsField, LxmfFileAttachment, LxmfAudioField
 from src.backend.audio_call_manager import AudioCall, AudioCallManager
 from src.backend.satellite_retry_policy import SatelliteRetryPolicy
@@ -278,6 +282,11 @@ class Crosstalk:
         RNS.logcall = log_to_buffer
 
         # init reticulum
+        if apply_macos_rnode_ble_compatibility():
+            RNS.log(
+                "Enabled Crosstalk's macOS RNode BLE compatibility layer",
+                RNS.LOG_NOTICE,
+            )
         ensure_bundled_reticulum_interfaces(reticulum_config_dir)
         ensure_dedicated_reticulum_instance(reticulum_config_dir)
         self.reticulum, self.interfaces_disabled_on_startup = start_reticulum(
@@ -567,6 +576,24 @@ class Crosstalk:
             return web.json_response({
                 "comports": comports,
             })
+
+        # Scan for RNodes using their Nordic UART BLE service. On macOS the
+        # returned identifier is a CoreBluetooth UUID rather than a MAC.
+        @routes.get("/api/v1/rnode/ble/scan")
+        async def index(request):
+            try:
+                requested_timeout = float(request.query.get("timeout", 6))
+                timeout = max(2.0, min(requested_timeout, 15.0))
+                devices = await scan_rnode_ble_devices(timeout=timeout)
+                return web.json_response({
+                    "devices": devices,
+                })
+            except Exception as error:
+                RNS.log(f"RNode BLE scan failed: {error}", RNS.LOG_ERROR)
+                return web.json_response({
+                    "message": f"Bluetooth scan failed: {error}",
+                    "devices": [],
+                }, status=503)
 
         # fetch reticulum interfaces
         @routes.get("/api/v1/reticulum/interfaces")

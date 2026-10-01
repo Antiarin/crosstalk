@@ -8,8 +8,8 @@ COPY *.json .
 COPY *.js .
 COPY src/frontend ./src/frontend
 
-# Install NodeJS deps, exluding electron
-RUN npm install --omit=dev && \
+# Install deterministic frontend dependencies, excluding Electron tooling
+RUN npm ci --omit=dev && \
   npm run build-frontend
 
 # Main app build

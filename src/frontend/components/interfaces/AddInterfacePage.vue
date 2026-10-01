@@ -229,7 +229,7 @@
                                 <option value="tcp">WiFi (TCP)</option>
                             </select>
                             <FormSubLabel>
-                                Heltec V3 and similar RNodes can connect over USB, Bluetooth LE, or WiFi. Pair the device in your OS Bluetooth settings before using BLE.
+                                Heltec V3 and similar RNodes can connect over USB, Bluetooth LE, or WiFi.
                             </FormSubLabel>
                         </div>
 
@@ -244,27 +244,67 @@
                         </div>
 
                         <div v-else-if="rnodeConnectionMode === 'ble'" class="space-y-3">
-                            <div>
-                                <FormLabel class="mb-1">Bluetooth Target</FormLabel>
-                                <select v-model="rnodeBleTarget" class="block w-full rounded-lg border p-2.5 text-sm">
-                                    <option value="first">First paired RNode</option>
-                                    <option value="name">Device name</option>
-                                    <option value="address">MAC address</option>
-                                </select>
-                                <FormSubLabel>
-                                    Saves as a <code>ble://</code> port that Reticulum opens with bleak. The RNode must already be paired/bonded.
-                                </FormSubLabel>
+                            <div class="rounded-lg border border-[var(--ct-border)] p-3">
+                                <FormLabel class="mb-1">Find your RNode</FormLabel>
+                                <div class="mb-2 text-sm text-[var(--ct-muted)]">
+                                    Turn Bluetooth on at the RNode, enter pairing mode, then scan. On a Heltec V3, hold PRG for about six seconds and release before ten seconds, when the PIN appears.
+                                </div>
+                                <button
+                                    type="button"
+                                    @click="scanRNodeBleDevices"
+                                    :disabled="rnodeBleScanning"
+                                    class="ct-brand-button rounded-lg px-3 py-2 text-sm font-semibold text-white disabled:cursor-wait disabled:opacity-60"
+                                >
+                                    {{ rnodeBleScanning ? "Scanning…" : "Scan for RNodes" }}
+                                </button>
+
+                                <div v-if="rnodeBleScanError" class="mt-2 text-sm text-red-400">{{ rnodeBleScanError }}</div>
+                                <div v-else-if="rnodeBleHasScanned && rnodeBleDevices.length === 0" class="mt-2 text-sm text-[var(--ct-muted)]">
+                                    No RNodes were found. Make sure the pairing PIN is visible, then scan again.
+                                </div>
+
+                                <div v-if="rnodeBleDevices.length > 0" class="mt-3 space-y-2">
+                                    <button
+                                        v-for="device in rnodeBleDevices"
+                                        :key="device.identifier"
+                                        type="button"
+                                        @click="selectRNodeBleDevice(device)"
+                                        class="block w-full rounded-lg border p-2.5 text-left transition"
+                                        :class="rnodeBleAddress === device.identifier ? 'border-blue-500 bg-[rgba(0,97,253,0.12)]' : 'border-[var(--ct-border)] hover:bg-[rgba(255,255,255,0.05)]'"
+                                    >
+                                        <span class="block text-sm font-semibold text-[var(--ct-text)]">{{ device.name }}</span>
+                                        <span class="ct-hash block break-all text-xs text-[var(--ct-dim)]">{{ device.identifier }}</span>
+                                        <span v-if="device.rssi != null" class="block text-xs text-[var(--ct-dim)]">Signal: {{ device.rssi }} dBm</span>
+                                    </button>
+                                </div>
+
+                                <div v-if="rnodeBleTarget === 'scan' && rnodeBleAddress" class="mt-2 text-sm text-green-400">
+                                    Selected {{ rnodeBleSelectedName || "RNode" }}
+                                </div>
                             </div>
-                            <div v-if="rnodeBleTarget === 'name'">
-                                <FormLabel class="mb-1">Device Name</FormLabel>
-                                <input v-model="rnodeBleName" type="text" placeholder="RNode 3B87" class="block w-full rounded-lg border p-2.5 text-sm">
-                                <FormSubLabel>Exact Bluetooth advertisement name, for example <code>RNode 3B87</code>.</FormSubLabel>
-                            </div>
-                            <div v-if="rnodeBleTarget === 'address'">
-                                <FormLabel class="mb-1">MAC Address</FormLabel>
-                                <input v-model="rnodeBleAddress" type="text" placeholder="AA:BB:CC:DD:EE:FF" class="block w-full rounded-lg border p-2.5 text-sm">
-                                <FormSubLabel>Six colon-separated hex octets, for example <code>AA:BB:CC:DD:EE:FF</code>.</FormSubLabel>
-                            </div>
+
+                            <details class="rounded-lg border border-[var(--ct-border)] p-3">
+                                <summary class="cursor-pointer text-sm font-medium text-[var(--ct-text)]">Advanced manual target</summary>
+                                <div class="mt-3 space-y-3">
+                                    <select v-model="rnodeBleTarget" class="block w-full rounded-lg border p-2.5 text-sm">
+                                        <option value="scan">Radio selected from scan</option>
+                                        <option value="first">First compatible RNode</option>
+                                        <option value="name">Device name</option>
+                                        <option value="address">MAC address or macOS UUID</option>
+                                    </select>
+                                    <div v-if="rnodeBleTarget === 'name'">
+                                        <FormLabel class="mb-1">Device Name</FormLabel>
+                                        <input v-model="rnodeBleName" type="text" placeholder="RNode 3B87" class="block w-full rounded-lg border p-2.5 text-sm">
+                                    </div>
+                                    <div v-if="rnodeBleTarget === 'address'">
+                                        <FormLabel class="mb-1">Bluetooth Identifier</FormLabel>
+                                        <input v-model="rnodeBleAddress" type="text" placeholder="MAC address or CoreBluetooth UUID" class="block w-full rounded-lg border p-2.5 text-sm">
+                                    </div>
+                                    <FormSubLabel>
+                                        Scanning is recommended. Manual targets are available for existing Reticulum configurations and troubleshooting.
+                                    </FormSubLabel>
+                                </div>
+                            </details>
                         </div>
 
                         <div v-else-if="rnodeConnectionMode === 'tcp'">
@@ -1101,9 +1141,14 @@ export default {
             newInterfacePort: null,
             // RNode connection: serial path, ble://…, or tcp://…
             rnodeConnectionMode: "serial",
-            rnodeBleTarget: "first",
+            rnodeBleTarget: "scan",
             rnodeBleName: "",
             rnodeBleAddress: "",
+            rnodeBleSelectedName: "",
+            rnodeBleDevices: [],
+            rnodeBleScanning: false,
+            rnodeBleHasScanned: false,
+            rnodeBleScanError: "",
             rnodeTcpHost: "",
             rnodePresetId: "",
             rnodeRegionalPresets: RNODE_REGIONAL_PRESETS,
@@ -1368,6 +1413,30 @@ export default {
                 // do nothing if failed to load interfaces
             }
         },
+        async scanRNodeBleDevices() {
+            this.rnodeBleScanning = true;
+            this.rnodeBleHasScanned = false;
+            this.rnodeBleScanError = "";
+            try {
+                const response = await window.axios.get("/api/v1/rnode/ble/scan?timeout=8");
+                this.rnodeBleDevices = response.data.devices ?? [];
+                this.rnodeBleHasScanned = true;
+                if(this.rnodeBleDevices.length === 1){
+                    this.selectRNodeBleDevice(this.rnodeBleDevices[0]);
+                }
+            } catch(error) {
+                this.rnodeBleDevices = [];
+                this.rnodeBleHasScanned = true;
+                this.rnodeBleScanError = error.response?.data?.message ?? "Bluetooth scan failed. Check macOS Bluetooth permission and try again.";
+            } finally {
+                this.rnodeBleScanning = false;
+            }
+        },
+        selectRNodeBleDevice(device) {
+            this.rnodeBleTarget = "scan";
+            this.rnodeBleAddress = device?.identifier ?? "";
+            this.rnodeBleSelectedName = device?.name ?? "RNode";
+        },
         /**
          * Build the Reticulum RNode `port` value from the connection-mode form.
          * Serial uses a device path; BLE/TCP use ble:// and tcp:// URIs.
@@ -1377,7 +1446,7 @@ export default {
                 if(this.rnodeBleTarget === "name"){
                     return `ble://${(this.rnodeBleName || "").trim()}`;
                 }
-                if(this.rnodeBleTarget === "address"){
+                if(this.rnodeBleTarget === "address" || this.rnodeBleTarget === "scan"){
                     return `ble://${(this.rnodeBleAddress || "").trim()}`;
                 }
                 return "ble://";
@@ -1399,13 +1468,18 @@ export default {
                 return null;
             }
             if(this.rnodeConnectionMode === "ble"){
+                if(this.rnodeBleTarget === "scan" && !(this.rnodeBleAddress || "").trim()){
+                    return "Scan for an RNode and select it before saving.";
+                }
                 if(this.rnodeBleTarget === "name" && !(this.rnodeBleName || "").trim()){
                     return "Enter the Bluetooth device name, for example RNode 3B87.";
                 }
                 if(this.rnodeBleTarget === "address"){
                     const address = (this.rnodeBleAddress || "").trim();
-                    if(!/^[0-9A-Fa-f]{2}(:[0-9A-Fa-f]{2}){5}$/.test(address)){
-                        return "Enter a Bluetooth MAC address like AA:BB:CC:DD:EE:FF.";
+                    const isMacAddress = /^[0-9A-Fa-f]{2}(:[0-9A-Fa-f]{2}){5}$/.test(address);
+                    const isCoreBluetoothUuid = /^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$/.test(address);
+                    if(!isMacAddress && !isCoreBluetoothUuid){
+                        return "Enter a Bluetooth MAC address or macOS CoreBluetooth UUID.";
                     }
                 }
                 return null;
@@ -1427,9 +1501,10 @@ export default {
             const lower = value.toLowerCase();
 
             this.rnodeConnectionMode = "serial";
-            this.rnodeBleTarget = "first";
+            this.rnodeBleTarget = "scan";
             this.rnodeBleName = "";
             this.rnodeBleAddress = "";
+            this.rnodeBleSelectedName = "";
             this.rnodeTcpHost = "";
 
             if(lower.startsWith("ble://")){
@@ -1440,6 +1515,10 @@ export default {
                 } else if(/^[0-9A-Fa-f]{2}(:[0-9A-Fa-f]{2}){5}$/.test(bleTarget)){
                     this.rnodeBleTarget = "address";
                     this.rnodeBleAddress = bleTarget;
+                } else if(/^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$/.test(bleTarget)){
+                    this.rnodeBleTarget = "scan";
+                    this.rnodeBleAddress = bleTarget;
+                    this.rnodeBleSelectedName = "Saved RNode";
                 } else {
                     this.rnodeBleTarget = "name";
                     this.rnodeBleName = bleTarget;

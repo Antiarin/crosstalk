@@ -1,35 +1,41 @@
 # RNode over Bluetooth (BLE)
 
-Crosstalk can attach an [RNode](https://github.com/markqvist/RNode_Firmware) (including Heltec V3) as a normal **RNode (LoRa Radio)** interface using Bluetooth Low Energy.
+Crosstalk can connect to an [RNode](https://github.com/markqvist/RNode_Firmware), including the Heltec LoRa 32 V3, without a USB cable. Messages travel from Crosstalk over Bluetooth to the RNode, then over LoRa to other Reticulum nodes.
 
-Reticulum already supports this with a `ble://` port. Crosstalk’s Add Interface form writes that port for you. The Python `bleak` package must be installed so Reticulum can open the BLE link (see `requirements.txt`).
+## Connect an RNode
 
-## Pair the RNode first
+1. Disconnect the RNode's USB cable if it stops Bluetooth advertising.
+2. Turn on Bluetooth at the RNode and put it in pairing mode.
+3. Open **Interfaces → Add Interface** in Crosstalk.
+4. Choose **RNode (LoRa Radio)** and set **Connection** to **Bluetooth (BLE)**.
+5. Press **Scan for RNodes**.
+6. Select the radio that appears and save the interface.
+7. Enter the PIN shown on the RNode if the operating system asks for it.
 
-1. Put the RNode in Bluetooth pairing mode (firmware / board instructions).
-2. Pair and bond it in your OS Bluetooth settings (Linux BlueZ, Windows, or macOS).
-3. Confirm it stays listed as paired before starting Crosstalk.
+Crosstalk saves the selected radio as a `ble://` target. On macOS that target is a CoreBluetooth UUID; on Windows or Linux it may be a Bluetooth address. You do not need to know either value before scanning.
 
-Reticulum only connects to **bonded** devices. An unpaired advertisement will not work.
+## Heltec V3 pairing mode
 
-## Add the interface in Crosstalk
+The Heltec V3 uses the **PRG** button:
 
-1. Open **Interfaces → Add Interface**.
-2. Choose **RNode (LoRa Radio)**.
-3. Set **Connection** to **Bluetooth (BLE)**.
-4. Pick a target:
-   - **First paired RNode** → saves `port = ble://`
-   - **Device name** → saves `port = ble://RNode 3B87` (exact advertisement name)
-   - **MAC address** → saves `port = ble://AA:BB:CC:DD:EE:FF`
-5. Choose a **Regional Preset** starter (US / EU / AU-NZ / 433 MHz) or leave **Custom** and enter your mesh's exact LoRa settings.
-6. Review frequency / bandwidth / SF / coding rate / TX power, then save.
+1. If the display is asleep, tap **PRG** once to wake it.
+2. Use a short press to turn Bluetooth on. Confirm the Bluetooth icon appears.
+3. Hold **PRG** for about six seconds, then release it before ten seconds.
+4. Scan while the pairing PIN is visible.
 
-Presets are common regional starters only — not legal requirements and not universal for every radio. Peers must match frequency, bandwidth, spreading factor, and coding rate.
+Releasing after five seconds enters Bluetooth pairing. Holding for more than ten seconds starts the RNode WiFi console/AP instead. If that happens, press **RST** once and try again.
 
-USB serial and WiFi (`tcp://host`) remain available on the same form.
+## Radio settings
 
-## Notes
+Choose a regional preset as a starting point, or enter the exact frequency, bandwidth, spreading factor, coding rate, and transmit power used by your mesh. Every peer must use compatible LoRa settings. Presets are starting points, not legal advice or universal radio defaults.
 
-- Prefer either USB **or** BLE to the same board at once; dual connections can confuse some firmware.
-- If the interface fails to start, check Crosstalk / RNS logs for bleak or bonding errors, then re-pair the device.
-- Packaged desktop builds include `bleak` so BLE works without a separate pip install when you use the official Crosstalk app.
+## Troubleshooting
+
+- Use USB or BLE, not both, while pairing and testing.
+- Keep the pairing PIN visible until Crosstalk connects.
+- If scanning finds nothing, re-enter pairing mode and scan again.
+- On macOS, scan inside Crosstalk. The RNode may never appear in System Settings.
+- If the interface stays disconnected, open **Diagnostics → Log Viewer** and search for `BLE` or `RNode`.
+- Official desktop packages include the required `bleak` Bluetooth library.
+
+USB serial and WiFi (`tcp://host`) remain available from the same RNode form.
