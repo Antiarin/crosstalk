@@ -13,15 +13,26 @@
                 <div class="text-sm text-[var(--ct-dim)]">
                     Frequency {{ extension.frequency }} ({{ extension.frequencyNote }}). Crosstalk encryption does not go over the radio; anyone with a receiver can read that part.
                 </div>
-                <a
-                    v-if="extension.repoUrl"
-                    :href="extension.repoUrl"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="mt-2 inline-flex items-center gap-x-1 text-sm font-semibold text-[#7db0ff] hover:text-white">
-                    <span>{{ extension.repoPublic === false ? "Source (not public yet)" : "Source" }}</span>
-                    <PhosphorIcon name="arrow-square-out" weight="bold" class="size-3.5"/>
-                </a>
+                <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+                    <a
+                        v-if="extension.guideUrl"
+                        :href="extension.guideUrl"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="inline-flex items-center gap-x-1 text-sm font-semibold text-[#7db0ff] hover:text-white">
+                        <span>Setup guide</span>
+                        <PhosphorIcon name="arrow-square-out" weight="bold" class="size-3.5"/>
+                    </a>
+                    <a
+                        v-if="extension.repoUrl"
+                        :href="extension.repoUrl"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="inline-flex items-center gap-x-1 text-sm font-semibold text-[#7db0ff] hover:text-white">
+                        <span>{{ extension.repoPublic === false ? "Source (not public yet)" : "Source" }}</span>
+                        <PhosphorIcon name="arrow-square-out" weight="bold" class="size-3.5"/>
+                    </a>
+                </div>
             </div>
 
             <div class="text-sm font-semibold text-[var(--ct-text)]">Choose a radio</div>

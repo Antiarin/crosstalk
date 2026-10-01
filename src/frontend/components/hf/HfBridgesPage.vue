@@ -27,7 +27,7 @@
                     <input v-model="repoPath" type="text" class="ct-message-input block w-full rounded-lg border px-2 py-1.5 text-sm" placeholder="/path/to/radio-bridge"/>
                 </label>
                 <div class="text-xs text-[var(--ct-dim)]">
-                    Software {{ repoReady ? "looks ready" : "not found yet" }}. This radio runs as its own program so it stays off Crosstalk's normal connections.
+                    Software {{ repoReady ? "looks ready" : "not found yet" }}. Choose the cloned reticulum-hf-bridge root containing src/hfbridge — not Crosstalk.app or src/hfbridge itself. This radio runs as its own program so it stays off Crosstalk's normal connections.
                 </div>
                 <button type="button" class="ct-secondary-button rounded-lg px-3 py-1.5 text-sm font-semibold" @click="saveSettings">
                     Save settings

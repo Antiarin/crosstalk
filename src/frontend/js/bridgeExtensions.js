@@ -40,7 +40,8 @@ export const OTA_LONG_HAUL = {
     frequency: "28.124 MHz",
     frequencyNote: "allowed range 28.120–28.189 MHz",
     repoUrl: "https://github.com/buildwithparallel/reticulum-hf-bridge",
-    repoPublic: false,
+    guideUrl: "https://github.com/buildwithparallel/crosstalk/blob/master/docs/ota_long_haul.md",
+    repoPublic: true,
     roles: [
         {
             id: "rtl-sdr",
@@ -53,10 +54,10 @@ export const OTA_LONG_HAUL = {
         {
             id: "hermes-lite",
             processRole: "txbridge",
-            kind: "Send and receive",
+            kind: "Transmit",
             hardware: "Hermes-Lite 2",
             icon: "broadcast",
-            summary: "Radio that can send. Needs a US Technician-class license or higher, and your callsign.",
+            summary: "Transmit-side radio. Reception for this bridge uses the separate RTL-SDR role.",
         },
     ],
 };

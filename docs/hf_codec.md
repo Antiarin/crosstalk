@@ -15,8 +15,11 @@ receiver can read the text. There is no second, hidden layer.
 Nothing on 10 meters is a Reticulum packet.
 
 The station software that keys Hermes-Lite 2 or listens on an RTL-SDR lives in
-a companion repo. This file is the codec. Publishing Crosstalk publishes the
-recipe.
+the companion
+[`reticulum-hf-bridge`](https://github.com/buildwithparallel/reticulum-hf-bridge)
+repository. This file is the codec. Publishing Crosstalk publishes the recipe.
+For installation and the two radio roles, start with the
+[OTA Long Haul setup guide](./ota_long_haul.md).
 
 ## Modulation
 

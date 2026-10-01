@@ -54,6 +54,12 @@ Templates for proven but uncommon Reticulum transports, such as Iridium IMT, so 
 
 Crosstalk can opt a conversation onto a licensed amateur HF hop when there is no Reticulum path. The radio hop is plaintext; encrypted Reticulum never goes on the air. The on-air recipe is public: [10 m HF codec](./docs/hf_codec.md).
 
+Start with [Use OTA Long Haul with Crosstalk](./docs/ota_long_haul.md) to see
+what Crosstalk provides, what the separate radio repository provides, and how
+to set up either the transmit-side Hermes-Lite 2 or receive-only RTL-SDR role.
+For phone-controlled range testing, the radio repository also has a
+[Raspberry Pi 5 + Tailscale field-test guide](https://github.com/buildwithparallel/reticulum-hf-bridge/blob/main/docs/pi5-tailscale-field-test.md).
+
 ## Install
 
 Download a packaged build for Windows, macOS or Linux from [Releases](https://github.com/buildwithparallel/crosstalk/releases).
